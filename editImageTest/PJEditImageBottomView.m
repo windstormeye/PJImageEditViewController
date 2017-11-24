@@ -75,7 +75,7 @@
 }
 
 - (void)shareBtnClick {
-    
+    [_viewDelegate PJEditImageBottomViewShareBtnClick];
 }
 
 

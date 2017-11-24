@@ -7,6 +7,8 @@
 //
 
 #import "AppDelegate.h"
+#import <UMSocialCore/UMSocialCore.h>
+
 
 @interface AppDelegate ()
 
@@ -16,8 +18,15 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
-    return YES;
+    /* 打开调试日志 */
+    [[UMSocialManager defaultManager] openLog:YES];
+    
+    /* 设置友盟appkey */
+    [[UMSocialManager defaultManager] setUmSocialAppkey:@"填好你的友盟Key"];
+    
+    /* 钉钉的appKey */
+    [[UMSocialManager defaultManager] setPlaform: UMSocialPlatformType_DingDing appKey:@"填好你的钉钉Key" appSecret:nil redirectURL:nil];
+    return YES;    return YES;
 }
 
 

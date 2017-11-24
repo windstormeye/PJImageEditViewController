@@ -10,6 +10,7 @@
 #import "PJEditImageBottomView.h"
 #import "PJEditImageBackImageView.h"
 #import "PJEditImageBottomColorView.h"
+#import <UShareUI/UShareUI.h>
 
 
 #define PJSCREEN_WIDTH [UIScreen mainScreen].bounds.size.width
@@ -80,6 +81,38 @@
 - (void)PJEditImageBottomViewBlurBtnClick {
     _isBlur = !_isBlur;
     self.touchView.isBlur = _isBlur;
+}
+
+- (void)PJEditImageBottomViewShareBtnClick {
+    UIGraphicsBeginImageContextWithOptions(CGSizeMake(PJSCREEN_WIDTH, PJSCREEN_HEIGHT - 50), true, 1.0);
+    [self.view.layer renderInContext:UIGraphicsGetCurrentContext()];
+    UIImage *uiImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    [self shareWebPageToPlatformType:UMSocialPlatformType_DingDing image:uiImage];
+}
+
+- (void)shareWebPageToPlatformType:(UMSocialPlatformType)platformType image:(UIImage *)image {
+    UMSocialMessageObject *messageObject = [UMSocialMessageObject messageObject];
+    UMShareImageObject *shareObject = [[UMShareImageObject alloc] init];
+    [shareObject setShareImage:image];
+    messageObject.shareObject = shareObject;
+    //调用分享接口
+    [[UMSocialManager defaultManager] shareToPlatform:platformType messageObject:messageObject currentViewController:self completion:^(id data, NSError *error) {
+        if (error) {
+            UMSocialLogInfo(@"************Share fail with error %@*********",error);
+        }else{
+            if ([data isKindOfClass:[UMSocialShareResponse class]]) {
+                UMSocialShareResponse *resp = data;
+                //分享结果消息
+                UMSocialLogInfo(@"response message is %@",resp.message);
+                //第三方原始返回的数据
+                UMSocialLogInfo(@"response originalResponse data is %@",resp.originalResponse);
+                
+            }else{
+                UMSocialLogInfo(@"response data is %@",data);
+            }
+        }
+    }];
 }
 
 @end

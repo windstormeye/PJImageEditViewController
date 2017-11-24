@@ -13,6 +13,8 @@
 - (void)PJEditImageBottomViewColorViewShow;
 - (void)PJEditImageBottomViewBackBtnClick;
 - (void)PJEditImageBottomViewBlurBtnClick;
+- (void)PJEditImageBottomViewShareBtnClick;
+
 
 @end
 

@@ -29,11 +29,19 @@
 @property(nonatomic,strong)NSMutableArray * appendPaths;
 // 储存所有的路径点
 @property(nonatomic,strong)NSMutableArray * allPaths;
+@property (nonatomic, strong) NSMutableArray* fingerTouchArr;
 
 @end
 
 @implementation PJEditImageTouchView {
     CGMutablePathRef currentPath;//路径
+}
+
+- (NSMutableArray *)fingerTouchArr {
+    if (!_fingerTouchArr) {
+        _fingerTouchArr = [NSMutableArray array];
+    }
+    return _fingerTouchArr;
 }
 
 - (NSMutableArray *)allPaths {
@@ -82,14 +90,12 @@
 
 // drawRect是内存杀手，后续解决这个问题
 - (void)drawRect:(CGRect)rect {
-    if (_isBlur) {
-    
-    } else {
-        CGContextRef context = UIGraphicsGetCurrentContext();
-        for (PJEditImageStroke *stroke in _stroks) {
-            [stroke strokeWithContext:context];
-        }
+    [super drawRect:rect];
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    for (PJEditImageStroke *stroke in _stroks) {
+        [stroke strokeWithContext:context];
     }
+    
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -103,6 +109,7 @@
         CGPathRelease(path);
         self.appendPaths = [NSMutableArray array];
         [self.appendPaths addObject:[NSValue valueWithCGPoint:point]];
+        [self.fingerTouchArr addObject:@(true)];
     } else {
         currentPath = CGPathCreateMutable();
         PJEditImageStroke *stroke = [[PJEditImageStroke alloc] init];
@@ -114,13 +121,13 @@
         UITouch *touch = [touches anyObject];
         CGPoint point = [touch locationInView:self];
         CGPathMoveToPoint(currentPath, NULL, point.x, point.y);
+        [self.fingerTouchArr addObject:@(false)];
     }
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    [super touchesEnded:touches withEvent:event];
+    [super touchesMoved:touches withEvent:event];
     if (_isBlur) {
-        [super touchesMoved:touches withEvent:event];
         UITouch *touch = [touches anyObject];
         CGPoint point = [touch locationInView:self];
         CGPathAddLineToPoint(self.blurPath, NULL, point.x, point.y);
@@ -155,7 +162,6 @@
 
 //撤回
 - (void)back{
-    // 如果PM要求需要点击统一撤回画笔和马赛克，在此修改
     [self.allPaths removeLastObject];
     self.blurPath = CGPathCreateMutable();
     //如果撤回步骤大于0次执行撤回 否则执行清除操作
@@ -169,7 +175,6 @@
                     CGMutablePathRef path = CGPathCreateMutableCopy(self.blurPath);
                     self.shapeLayer.path = path;
                     CGPathRelease(path);
-                    
                 }else{
                     CGPathAddLineToPoint(self.blurPath, NULL, point.x, point.y);
                     CGMutablePathRef path = CGPathCreateMutableCopy(self.blurPath);
@@ -192,15 +197,16 @@
 }
 
 // 撤回
-// 按照微信的来，画笔只能撤回画笔，马赛克只能撤回马赛克
 - (void)revokeScreen {
     _isEarse = NO;
-    if (_isBlur) {
+    NSInteger revokeJudge = [[self.fingerTouchArr lastObject] integerValue];
+    if (revokeJudge) {
         [self back];
     } else {
-        [_stroks removeLastObject];
+        [self.stroks removeLastObject];
         [self setNeedsDisplay];
     }
+    [self.fingerTouchArr removeLastObject];
 }
 
 // 橡皮擦
